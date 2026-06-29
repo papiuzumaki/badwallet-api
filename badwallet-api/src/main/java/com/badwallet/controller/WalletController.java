@@ -4,6 +4,7 @@ import com.badwallet.dto.*;
 import com.badwallet.model.Wallet;
 import com.badwallet.model.WalletTransaction;
 import com.badwallet.service.WalletService;
+import com.badwallet.service.WalletStatsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +22,7 @@ import java.util.Map;
 public class WalletController {
 
     private final WalletService walletService;
+    private final WalletStatsService walletStatsService;
 
     // 1.1 Seeder la base de données (Async)
     @PostMapping("/seed")
@@ -94,5 +96,11 @@ public class WalletController {
     @GetMapping("/{phone}/transactions")
     public ResponseEntity<List<WalletTransaction>> getTransactions(@PathVariable String phone) {
         return ResponseEntity.ok(walletService.getTransactionHistory(phone));
+    }
+
+    // 1.12 Statistiques d'un portefeuille
+    @GetMapping("/{phone}/stats")
+    public ResponseEntity<WalletStatsDto> getStats(@PathVariable String phone) {
+        return ResponseEntity.ok(walletStatsService.getStats(phone));
     }
 }

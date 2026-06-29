@@ -77,10 +77,11 @@ public class WalletService {
         Wallet wallet = Wallet.builder()
                 .phoneNumber(req.getPhoneNumber())
                 .email(req.getEmail())
-                .code(req.getCode())
                 .currency(req.getCurrency() != null ? req.getCurrency() : "XOF")
                 .balance(req.getInitialBalance() != null ? req.getInitialBalance() : 0.0)
                 .build();
+        wallet = walletRepository.save(wallet);
+        wallet.setCode("WLT-" + String.format("%07d", wallet.getId()));
         return walletRepository.save(wallet);
     }
 
