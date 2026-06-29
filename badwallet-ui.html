@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BadWallet — Interface de test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+    header { background: #1e293b; border-bottom: 1px solid #334155; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 18px; font-weight: 600; color: #60a5fa; }
+    header span { font-size: 12px; color: #64748b; background: #0f1117; padding: 3px 8px; border-radius: 4px; }
+    .layout { display: flex; height: calc(100vh - 57px); }
+    nav { width: 220px; background: #1e293b; border-right: 1px solid #334155; padding: 16px 0; flex-shrink: 0; overflow-y: auto; }
+    nav .section { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #475569; padding: 16px 16px 6px; }
+    nav button { width: 100%; text-align: left; padding: 8px 16px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; border-left: 3px solid transparent; }
+    nav button:hover { background: #0f1117; color: #e2e8f0; }
+    nav button.active { background: #0f1117; color: #60a5fa; border-left-color: #3b82f6; }
+    nav button .method { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px; }
+    nav button .method.get { background: #14532d; color: #86efac; }
+    nav button .method.post { background: #1e3a5f; color: #93c5fd; }
+    main { flex: 1; overflow-y: auto; padding: 24px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    h2 { font-size: 16px; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .form-grid.full { grid-template-columns: 1fr; }
+    label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px; }
+    input, select, textarea { width: 100%; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; }
+    input:focus, select:focus { border-color: #3b82f6; }
+    textarea { resize: vertical; min-height: 80px; font-family: monospace; }
+    .btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .btn:hover { background: #2563eb; }
+    .btn:active { transform: scale(0.98); }
+    .btn.loading { opacity: 0.7; pointer-events: none; }
+    .response-box { margin-top: 20px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; overflow: hidden; }
+    .response-header { padding: 10px 16px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; font-size: 12px; }
+    .status { padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; }
+    .status.ok { background: #14532d; color: #86efac; }
+    .status.err { background: #7f1d1d; color: #fca5a5; }
+    .response-body { padding: 16px; font-family: monospace; font-size: 12px; color: #a5f3fc; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+    .badge-pattern { display: inline-block; font-size: 10px; background: #1e3a5f; color: #93c5fd; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+    .info-box { background: #1e293b; border-left: 3px solid #3b82f6; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; font-size: 12px; color: #94a3b8; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>BadWallet</h1>
+  <span>badwallet-api :8080</span>
+  <span style="margin-left:auto; color:#22c55e;">● payment-service :8081</span>
+</header>
+
+<div class="layout">
+  <nav>
+    <div class="section">Wallets</div>
+    <button class="active" onclick="show('seed')"><span class="method post">POST</span> Seed BDD</button>
+    <button onclick="show('create')"><span class="method post">POST</span> Créer wallet</button>
+    <button onclick="show('list')"><span class="method get">GET</span> Lister wallets</button>
+    <button onclick="show('get')"><span class="method get">GET</span> Consulter wallet</button>
+    <button onclick="show('balance')"><span class="method get">GET</span> Solde</button>
+
+    <div class="section">Transactions</div>
+    <button onclick="show('deposit')"><span class="method post">POST</span> Dépôt</button>
+    <button onclick="show('withdraw')"><span class="method post">POST</span> Retrait</button>
+    <button onclick="show('transfer')"><span class="method post">POST</span> Transfert</button>
+    <button onclick="show('history')"><span class="method get">GET</span> Historique</button>
+
+    <div class="section">Paiements</div>
+    <button onclick="show('pay')"><span class="method post">POST</span> Payer facture</button>
+    <button onclick="show('pay-factures')"><span class="method post">POST</span> Factures spécifiques</button>
+
+    <div class="section">Proxy API</div>
+    <button onclick="show('factures-current')"><span class="method get">GET</span> Factures du mois</button>
+    <button onclick="show('factures-periode')"><span class="method get">GET</span> Factures période</button>
+  </nav>
+
+  <main>
+
+    <!-- SEED -->
+    <div class="panel active" id="p-seed">
+      <h2>Seeder la base de données <span class="badge-pattern">Observer Pattern (Async)</span></h2>
+      <div class="subtitle">POST /api/wallets/seed — Lance le seeding en arrière-plan</div>
+      <div class="form-grid">
+        <div><label>Nombre de wallets</label><input id="seed-num" value="10" type="number"/></div>
+        <div><label>Événements par wallet</label><input id="seed-events" value="100" type="number"/></div>
+      </div>
+      <button class="btn" onclick="call('POST','http://localhost:8080/api/wallets/seed?numWallets='+document.getElementById('seed-num').value+'&eventsPerWallet='+document.getElementById('seed-events').value,null,'seed')">Lancer le seed</button>
+      <div class="response-box" id="res-seed" style="display:none"></div>
+    </div>
+
+    <!-- CREATE -->
+    <div class="panel" id="p-create">
+      <h2>Créer un wallet</h2>
+      <div class="subtitle">POST /api/wallets</div>
+      <div class="form-grid">
+        <div><label>Téléphone</label><input id="c-phone" value="+221779998877"/></div>
+        <div><label>Email</label><input id="c-email" value="client@badwallet.com"/></div>
+        <div><label>Solde initial</label><input id="c-balance" value="25000" type="number"/></div>
+        <div><label>Code</label><input id="c-code" value="WLT-TEST001"/></div>
+        <div><label>Devise</label><input id="c-currency" value="XOF"/></div>
+      </div>
+      <button class="btn" onclick="call('POST','http://localhost:8080/api/wallets',{phoneNumber:v('c-phone'),email:v('c-email'),initialBalance:n('c-balance'),code:v('c-code'),currency:v('c-currency')},'create')">Créer</button>
+      <div class="response-box" id="res-create" style="display:none"></div>
+    </div>
+
+    <!-- LIST -->
+    <div class="panel" id="p-list">
+      <h2>Lister les wallets</h2>
+      <div class="subtitle">GET /api/wallets — Résultat paginé</div>
+      <div class="form-grid">
+        <div><label>Page</label><input id="l-page" value="0" type="number"/></div>
+        <div><label>Taille</label><input id="l-size" value="10" type="number"/></div>
+      </div>
+      <button class="btn" onclick="call('GET','http://localhost:8080/api/wallets?page='+v('l-page')+'&size='+v('l-size'),null,'list')">Lister</button>
+      <div class="response-box" id="res-list" style="display:none"></div>
+    </div>
+
+    <!-- GET -->
+    <div class="panel" id="p-get">
+      <h2>Consulter un wallet</h2>
+      <div class="subtitle">GET /api/wallets/{phone}</div>
+      <div class="form-grid">
+        <div><label>Numéro de téléphone</label><input id="g-phone" value="+221770000001"/></div>
+      </div>
+      <button class="btn" onclick="call('GET','http://localhost:8080/api/wallets/'+encodeURIComponent(v('g-phone')),null,'get')">Consulter</button>
+      <div class="response-box" id="res-get" style="display:none"></div>
+    </div>
+
+    <!-- BALANCE -->
+    <div class="panel" id="p-balance">
+      <h2>Consulter le solde</h2>
+      <div class="subtitle">GET /api/wallets/{phone}/balance</div>
+      <div class="form-grid">
+        <div><label>Numéro de téléphone</label><input id="b-phone" value="+221770000001"/></div>
+      </div>
+      <button class="btn" onclick="call('GET','http://localhost:8080/api/wallets/'+encodeURIComponent(v('b-phone'))+'/balance',null,'balance')">Voir solde</button>
+      <div class="response-box" id="res-balance" style="display:none"></div>
+    </div>
+
+    <!-- DEPOSIT -->
+    <div class="panel" id="p-deposit">
+      <h2>Effectuer un dépôt <span class="badge-pattern">Strategy + Factory Pattern</span></h2>
+      <div class="subtitle">POST /api/wallets/{id}/deposit</div>
+      <div class="info-box">Utilise le <strong>Strategy Pattern</strong> : CREDIT_CARD et WALLET_TARGET sont deux stratégies interchangeables sélectionnées par la Factory.</div>
+      <div class="form-grid">
+        <div><label>ID du wallet</label><input id="d-id" value="1" type="number"/></div>
+        <div><label>Montant (XOF)</label><input id="d-amount" value="50000" type="number"/></div>
+        <div><label>Méthode de paiement</label>
+          <select id="d-method">
+            <option value="CREDIT_CARD">CREDIT_CARD</option>
+            <option value="WALLET_TARGET">WALLET_TARGET</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="call('POST','http://localhost:8080/api/wallets/'+v('d-id')+'/deposit',{amount:n('d-amount'),paymentMethod:v('d-method')},'deposit')">Déposer</button>
+      <div class="response-box" id="res-deposit" style="display:none"></div>
+    </div>
+
+    <!-- WITHDRAW -->
+    <div class="panel" id="p-withdraw">
+      <h2>Effectuer un retrait</h2>
+      <div class="subtitle">POST /api/wallets/withdraw — Frais : 1% du montant, plafonné à 5 000 XOF</div>
+      <div class="form-grid">
+        <div><label>Téléphone</label><input id="w-phone" value="+221770000001"/></div>
+        <div><label>Montant (XOF)</label><input id="w-amount" value="10000" type="number"/></div>
+      </div>
+      <button class="btn" onclick="call('POST','http://localhost:8080/api/wallets/withdraw',{phoneNumber:v('w-phone'),amount:n('w-amount')},'withdraw')">Retirer</button>
+      <div class="response-box" id="res-withdraw" style="display:none"></div>
+    </div>
+
+    <!-- TRANSFER -->
+    <div class="panel" id="p-transfer">
+      <h2>Transfert entre wallets <span class="badge-pattern">Observer Pattern</span></h2>
+      <div class="subtitle">POST /api/wallets/transfer</div>
+      <div class="form-grid">
+        <div><label>Expéditeur (téléphone)</label><input id="t-sender" value="+221770000001"/></div>
+        <div><label>Destinataire (téléphone)</label><input id="t-receiver" value="+221770000002"/></div>
+        <div><label>Montant (XOF)</label><input id="t-amount" value="2000" type="number"/></div>
+      </div>
+      <button class="btn" onclick="call('POST','http://localhost:8080/api/wallets/transfer',{senderPhone:v('t-sender'),receiverPhone:v('t-receiver'),amount:n('t-amount')},'transfer')">Transférer</button>
+      <div class="response-box" id="res-transfer" style="display:none"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="panel" id="p-history">
+      <h2>Historique des transactions</h2>
+      <div class="subtitle">GET /api/wallets/{phone}/transactions</div>
+      <div class="form-grid">
+        <div><label>Téléphone</label><input id="h-phone" value="+221770000001"/></div>
+      </div>
+      <button class="btn" onclick="call('GET','http://localhost:8080/api/wallets/'+encodeURIComponent(v('h-phone'))+'/transactions',null,'history')">Voir historique</button>
+      <div class="response-box" id="res-history" style="display:none"></div>
+    </div>
+
+    <!-- PAY -->
+    <div class="panel" id="p-pay">
+      <h2>Payer une facture du mois <span class="badge-pattern">Proxy Pattern</span></h2>
+      <div class="subtitle">POST /api/wallets/pay — Appel via PaymentServiceProxy → payment-service:8081</div>
+      <div class="info-box">Le <strong>Proxy Pattern</strong> intercepte l'appel et le redirige vers le payment-service externe de manière transparente.</div>
+      <div class="form-grid">
+        <div><label>Téléphone</label><input id="p-phone" value="+221770000003"/></div>
+        <div><label>Service</label>
+          <select id="p-service">
+            <option value="ISM">ISM</option>
+            <option value="WOYAFAL">WOYAFAL</option>
+          </select>
+        </div>
+        <div><label>Montant (XOF)</label><input id="p-amount" value="5000" type="number"/></div>
+      </div>
+      <button class="btn" onclick="call('POST','http://localhost:8080/api/wallets/pay',{phoneNumber:v('p-phone'),serviceName:v('p-service'),amount:n('p-amount')},'pay')">Payer</button>
+      <div class="response-box" id="res-pay" style="display:none"></div>
+    </div>
+
+    <!-- PAY-FACTURES -->
+    <div class="panel" id="p-pay-factures">
+      <h2>Payer des factures spécifiques <span class="badge-pattern">Proxy Pattern</span></h2>
+      <div class="subtitle">POST /api/wallets/pay-factures</div>
+      <div class="form-grid">
+        <div><label>Téléphone</label><input id="pf-phone" value="+221770000003"/></div>
+        <div><label>Service</label>
+          <select id="pf-service">
+            <option value="ISM">ISM</option>
+            <option value="WOYAFAL">WOYAFAL</option>
+          </select>
+        </div>
+        <div class="full"><label>Références des factures (séparées par des virgules)</label><input id="pf-refs" value="FAC-ISM-3-1, FAC-ISM-3-3"/></div>
+      </div>
+      <button class="btn" onclick="payFactures()">Payer</button>
+      <div class="response-box" id="res-pay-factures" style="display:none"></div>
+    </div>
+
+    <!-- FACTURES CURRENT -->
+    <div class="panel" id="p-factures-current">
+      <h2>Factures impayées du mois <span class="badge-pattern">Proxy Pattern</span></h2>
+      <div class="subtitle">GET /api/external/factures/{walletCode}/current</div>
+      <div class="form-grid">
+        <div><label>Code wallet</label><input id="fc-code" value="WLT-0000003"/></div>
+        <div><label>Filtrer par unité (optionnel)</label>
+          <select id="fc-unite">
+            <option value="">Toutes</option>
+            <option value="ISM">ISM</option>
+            <option value="WOYAFAL">WOYAFAL</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="getFactures()">Consulter</button>
+      <div class="response-box" id="res-factures-current" style="display:none"></div>
+    </div>
+
+    <!-- FACTURES PERIODE -->
+    <div class="panel" id="p-factures-periode">
+      <h2>Factures sur une période</h2>
+      <div class="subtitle">GET /api/external/factures/{walletCode}/periode</div>
+      <div class="form-grid">
+        <div><label>Code wallet</label><input id="fp-code" value="WLT-0000003"/></div>
+        <div></div>
+        <div><label>Date début</label><input id="fp-debut" value="2026-06-01" type="date"/></div>
+        <div><label>Date fin</label><input id="fp-fin" value="2026-07-01" type="date"/></div>
+      </div>
+      <button class="btn" onclick="call('GET','http://localhost:8080/api/external/factures/'+v('fp-code')+'/periode?debut='+v('fp-debut')+'&fin='+v('fp-fin'),null,'factures-periode')">Consulter</button>
+      <div class="response-box" id="res-factures-periode" style="display:none"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function v(id) { return document.getElementById(id).value; }
+  function n(id) { return parseFloat(document.getElementById(id).value); }
+
+  function show(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('p-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  async function call(method, url, body, resId) {
+    const box = document.getElementById('res-' + resId);
+    box.style.display = 'block';
+    box.innerHTML = '<div class="response-header"><span style="color:#64748b;font-size:12px">Chargement...</span></div>';
+    try {
+      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(url, opts);
+      const text = await res.text();
+      let pretty = text;
+      try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch(e) {}
+      box.innerHTML = `
+        <div class="response-header">
+          <span class="status ${res.ok ? 'ok' : 'err'}">${res.status} ${res.statusText}</span>
+          <span style="color:#64748b">${method} ${url.replace('http://localhost:8080','').replace('http://localhost:8081','')}</span>
+        </div>
+        <div class="response-body">${escHtml(pretty)}</div>`;
+    } catch(e) {
+      box.innerHTML = `<div class="response-header"><span class="status err">Erreur</span></div><div class="response-body">${e.message}\n\nVérifiez que le serveur est bien démarré sur le bon port.</div>`;
+    }
+  }
+
+  function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function payFactures() {
+    const refs = v('pf-refs').split(',').map(r => r.trim()).filter(Boolean);
+    call('POST','http://localhost:8080/api/wallets/pay-factures',{phoneNumber:v('pf-phone'),serviceName:v('pf-service'),factureReferences:refs},'pay-factures');
+  }
+
+  function getFactures() {
+    const unite = v('fc-unite');
+    const url = 'http://localhost:8080/api/external/factures/' + v('fc-code') + '/current' + (unite ? '?unite=' + unite : '');
+    call('GET', url, null, 'factures-current');
+  }
+</script>
+</body>
+</html>
